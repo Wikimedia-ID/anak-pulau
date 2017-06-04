@@ -1,0 +1,21 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    byebug (9.0.6)
+    httpi (2.4.2)
+      rack
+      socksify
+    overpass-api-ruby (0.2.2)
+      httpi (~> 2.4.0)
+    rack (2.0.3)
+    socksify (1.7.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  byebug
+  overpass-api-ruby
+
+BUNDLED WITH
+   1.15.1
