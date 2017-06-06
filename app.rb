@@ -3,11 +3,13 @@ require 'json'
 require 'csv'
 require 'overpass_api_ruby'
 require 'byebug'
+require 'active_support/core_ext/hash/indifferent_access'
+
+OPENSTREETMAP_HOST = 'http://openstreetmap.org';
 
 # Parsing arguments
-# ARGV[0] is the Administrative area we want to find the island location
-location = ARGV[0]
-
+# ARGV[0] is the Administrative area we want to find the island LOCATION
+LOCATION = ARGV[0]
 OVERPASS = OverpassAPI::QL.new()
 
 # Search island that have tags started with wiki (as for now, it could be
@@ -15,21 +17,21 @@ OVERPASS = OverpassAPI::QL.new()
 # to area within Indonesia
 # relation for a geogpraphic area that represent an Island). The search scopped
 MAIN_QUERY = <<QUERY
-( area[name="#{location}"]; )->.a;
+( area[name="#{LOCATION}"]; )->.a;
 way[place="island"][~"^wiki"~".+?$"](area.a);
 (._;>>;);
-out;
+out meta;
 rel[place="island"][~"^wiki"~".+?$"](area.a);
 (._;>>;);
-out;
+out meta;
 QUERY
 
-result = OVERPASS.query(MAIN_QUERY)
+result = ActiveSupport::HashWithIndifferentAccess.new OVERPASS.query(MAIN_QUERY)
 
-File.write("results/#{location}_islands.json",result.to_json)
+File.write("results/#{LOCATION}_islands.json",result.to_json)
 
 # To csv
-CSV.open("results/#{location}_islands.csv", 'w',
+CSV.open("results/#{LOCATION}_islands.csv", 'w',
   col_sep: ',',
   write_headers: true,
   headers: [
@@ -40,10 +42,13 @@ CSV.open("results/#{location}_islands.csv", 'w',
     'Wikipedia URL',
     'Wikidata ID',
     'Wikidata URL',
-    'Name'
+    'Name',
+    'Editor',
+    'ChangeSet'
   ]) do |csv|
-    result.to_json.map do |j|
+    result['elements'].map do |j|
       if j.dig('tags', 'wikidata') || j.dig('tags', 'wikipedia')
+        # Row Creation
         wikipedia_language = if j['tags']['wikipedia']
                                 j['tags']['wikipedia'].split(':')[0]
                              else
@@ -60,18 +65,38 @@ CSV.open("results/#{location}_islands.csv", 'w',
                              else
                                ""
                              end
-
         row = [
                 j['id'],
-                "http://openstreetmap.org/#{j['type']}/#{j['id']}",
+                "#{OPENSTREETMAP_HOST}/#{j['type']}/#{j['id']}",
                 j['tags']['wikipedia'],
                 wikipedia_language,
                 wikipedia_path,
                 j['tags']['wikidata'],
                 "http://wikidata.org/#{j['tags']['wikidata']}",
-                j['tags']['name']
+                j['tags']['name'],
+                "#{OPENSTREETMAP_HOST}/user/#{j['user']}",
+                "#{OPENSTREETMAP_HOST}/changeset/#{j['changeset']}"
               ]
         csv << row
+        if(j['type'] == 'relation')
+          relation_directory = "results/#{LOCATION}_contributors"
+          FileUtils.mkdir_p(relation_directory)
+          j['members'].each do |member|
+            if member['type'] == 'way'
+              coresponding_way = result['elements'].detect { |element| element['id'] == member['ref'] }
+              CSV.open("#{relation_directory}/way_#{coresponding_way['id']}_by_#{coresponding_way['user']}.csv", 'w',
+                write_headers: true,
+                headers: [ 'node_url',
+                           'contributor_url' ]) do |csv_way|
+                coresponding_way['nodes'].each do |node_ref|
+                  coresponding_node = result['elements'].detect { |element| element['id'] == node_ref }
+                  csv_way << ["#{OPENSTREETMAP_HOST}/node/#{coresponding_node['id']}",
+                              "#{OPENSTREETMAP_HOST}/user/#{coresponding_node['user']}"]
+                end
+              end
+            end
+          end
+        end
       end
     end
 end
