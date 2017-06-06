@@ -4,6 +4,7 @@ require 'csv'
 require 'overpass_api_ruby'
 require 'byebug'
 require 'active_support/core_ext/hash/indifferent_access'
+require 'active_support/core_ext/string/inflections'
 
 OPENSTREETMAP_HOST = 'http://openstreetmap.org';
 
@@ -31,7 +32,7 @@ result = ActiveSupport::HashWithIndifferentAccess.new OVERPASS.query(MAIN_QUERY)
 File.write("results/#{LOCATION}_islands.json",result.to_json)
 
 # To csv
-CSV.open("results/#{LOCATION}_islands.csv", 'w',
+CSV.open("results/#{LOCATION.gsub(/\s/, '_')}_islands.csv", 'w',
   col_sep: ',',
   write_headers: true,
   headers: [
@@ -72,14 +73,14 @@ CSV.open("results/#{LOCATION}_islands.csv", 'w',
                 wikipedia_language,
                 wikipedia_path,
                 j['tags']['wikidata'],
-                "http://wikidata.org/#{j['tags']['wikidata']}",
+                "http://wikidata.org/wiki/#{j['tags']['wikidata']}",
                 j['tags']['name'],
                 "#{OPENSTREETMAP_HOST}/user/#{j['user']}",
                 "#{OPENSTREETMAP_HOST}/changeset/#{j['changeset']}"
               ]
         csv << row
         if(j['type'] == 'relation')
-          relation_directory = "results/#{LOCATION}_contributors"
+          relation_directory = "results/#{LOCATION.gsub(/\s/, '_')}_contributors/#{j['tags']['name'].gsub(/\s/, '_')}"
           FileUtils.mkdir_p(relation_directory)
           j['members'].each do |member|
             if member['type'] == 'way'
@@ -94,6 +95,20 @@ CSV.open("results/#{LOCATION}_islands.csv", 'w',
                               "#{OPENSTREETMAP_HOST}/user/#{coresponding_node['user']}"]
                 end
               end
+            end
+          end
+        end
+        if(j['type'] == 'way')
+          way_directory = "results/#{LOCATION.gsub(/\s/, '_')}_contributors/way_#{j['tags']['name'].gsub(/\s/, '_')}"
+          FileUtils.mkdir_p(way_directory)
+          CSV.open("#{way_directory}/way_#{j['id']}_by_#{j['user']}.csv", 'w',
+            write_headers: true,
+            headers: [ 'node_url',
+                       'contributor_url' ]) do |csv_way|
+            j['nodes'].each do |node_ref|
+              coresponding_node = result['elements'].detect { |element| element['id'] == node_ref }
+              csv_way << ["#{OPENSTREETMAP_HOST}/node/#{coresponding_node['id']}",
+                          "#{OPENSTREETMAP_HOST}/user/#{coresponding_node['user']}"]
             end
           end
         end
