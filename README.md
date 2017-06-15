@@ -34,3 +34,19 @@ dan
 ```
 results/Bali_islands.csv
 ```
+
+## Opsi
+
+```sh
+Usage: ruby app.rb 'location_name' [options]
+        --extract-geoshape           Extract Island Geoshape
+    -h, --help                       Show complete options (This message)
+```
+
+### Ekstrak Geoshape
+Untuk mengambil bentu object dengan referensi geo, gunakan opsi `--extract-geoshape`.
+Dengan opsi ini, akan terbentu file geojson di setiap directory. Saat ini hanya support untuk tipe obyek Jalur (way)
+Contoh
+```sh
+ruby app.rb Bali --extract-geoshape
+```

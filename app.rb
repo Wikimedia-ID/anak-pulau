@@ -1,16 +1,33 @@
 require 'irb'
 require 'json'
 require 'csv'
+require 'optparse'
 require 'overpass_api_ruby'
 require 'byebug'
 require 'active_support/core_ext/hash/indifferent_access'
 require 'active_support/core_ext/string/inflections'
+require 'pp'
 
-OPENSTREETMAP_HOST = 'http://openstreetmap.org';
+OPENSTREETMAP_HOST = 'http://openstreetmap.org'.freeze;
+
+OPTIONS = OpenStruct.new({ extract_geoshape: false, location: '' })
 
 # Parsing arguments
-# ARGV[0] is the Administrative area we want to find the island LOCATION
-LOCATION = ARGV[0]
+# ARGV[0] is the Administrative area we want to find the island location
+OptionParser.new do |opt|
+  opt.banner = "Usage: ruby app.rb 'location_name' [options]"
+  opt.on('--extract-geoshape', 'Extract Island Geoshape') do |v|
+    p v
+    OPTIONS.extract_geoshape = v
+  end
+  opt.on_tail("-h", "--help", "Show complete options (This message)") do
+    puts opt
+    exit
+  end
+end.parse!
+
+OPTIONS.location = ARGV[0]
+
 OVERPASS = OverpassAPI::QL.new()
 
 # Search island that have tags started with wiki (as for now, it could be
@@ -18,21 +35,27 @@ OVERPASS = OverpassAPI::QL.new()
 # to area within Indonesia
 # relation for a geogpraphic area that represent an Island). The search scopped
 MAIN_QUERY = <<QUERY
-( area[name="#{LOCATION}"]; )->.a;
+( area[name="#{OPTIONS.location}"]; )->.a;
 way[place="island"][~"^wiki"~".+?$"](area.a);
 (._;>>;);
 out meta;
 rel[place="island"][~"^wiki"~".+?$"](area.a);
 (._;>>;);
 out meta;
+way[place="islet"](area.a);
+(._;>>;);
+out meta;
+rel[place="islet"](area.a);
+(._;>>;);
+out meta;
 QUERY
 
 result = ActiveSupport::HashWithIndifferentAccess.new OVERPASS.query(MAIN_QUERY)
 
-File.write("results/#{LOCATION}_islands.json",result.to_json)
+File.write("results/#{OPTIONS.location}_islands.json",result.to_json)
 
 # To csv
-CSV.open("results/#{LOCATION.gsub(/\s/, '_')}_islands.csv", 'w',
+CSV.open("results/#{OPTIONS.location.gsub(/\s/, '_')}_islands.csv", 'w',
   col_sep: ',',
   write_headers: true,
   headers: [
@@ -80,7 +103,7 @@ CSV.open("results/#{LOCATION.gsub(/\s/, '_')}_islands.csv", 'w',
               ]
         csv << row
         if(j['type'] == 'relation')
-          relation_directory = "results/#{LOCATION.gsub(/\s/, '_')}_contributors/#{j['tags']['name'].gsub(/\s/, '_')}"
+          relation_directory = "results/#{OPTIONS.location.gsub(/\s/, '_')}_contributors/#{j['tags']['name'].gsub(/\s/, '_')}"
           FileUtils.mkdir_p(relation_directory)
           j['members'].each do |member|
             if member['type'] == 'way'
@@ -99,8 +122,16 @@ CSV.open("results/#{LOCATION.gsub(/\s/, '_')}_islands.csv", 'w',
           end
         end
         if(j['type'] == 'way')
-          way_directory = "results/#{LOCATION.gsub(/\s/, '_')}_contributors/way_#{j['tags']['name'].gsub(/\s/, '_')}"
+          way_directory = "results/#{OPTIONS.location.gsub(/\s/, '_')}_contributors/way_#{j['tags']['name'].gsub(/\s/, '_')}"
           FileUtils.mkdir_p(way_directory)
+
+          # Extracting GeoShape
+          if OPTIONS.extract_geoshape
+            geo_json = {
+              type: 'Polygon',
+              coordinates: [[]]
+            }
+          end
           CSV.open("#{way_directory}/way_#{j['id']}_by_#{j['user']}.csv", 'w',
             write_headers: true,
             headers: [ 'node_url',
@@ -109,7 +140,16 @@ CSV.open("results/#{LOCATION.gsub(/\s/, '_')}_islands.csv", 'w',
               coresponding_node = result['elements'].detect { |element| element['id'] == node_ref }
               csv_way << ["#{OPENSTREETMAP_HOST}/node/#{coresponding_node['id']}",
                           "#{OPENSTREETMAP_HOST}/user/#{coresponding_node['user']}"]
+              if OPTIONS.extract_geoshape
+                geo_json[:coordinates].first.push([coresponding_node['lon'], coresponding_node['lat']])
+              end
             end
+            if OPTIONS.extract_geoshape
+              File.write("#{way_directory}/way_#{j['id']}_by_#{j['user']}.geojson", geo_json.to_json)
+            end
+          end
+          if OPTIONS.extract_geoshape
+            geo_json = nil
           end
         end
       end
