@@ -10,7 +10,7 @@ git clone https://github.com/Wikimedia-ID/anak-pulau.git && cd anak-pulau
 
 Install dependency
 ```sh
-gem install bundler && bundle Install
+gem install bundler && bundle install
 ```
 
 ## Penggunaan
