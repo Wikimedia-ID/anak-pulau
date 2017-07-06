@@ -1,0 +1,21 @@
+language: node_js
+sudo: false
+node_js: 6
+install:
+  - npm install
+before_script:
+  - npm install -g osmtogeojson
+script:
+  - url="http://overpass-api.de/api/interpreter?data=$(<query.txt)"
+  - wget -O results/kalimantan.json "$url"
+  - osmtogeojson results/kalimantan.json > results/kalimantan.geojson
+  - git clone https://gist.github.com/7801bcdc141a98e06b223af58905e12d.git results/osmjs
+  - npm run build-credits
+  - npm run build-pages
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GH_TOKEN
+  local_dir: public
+  on:
+    branch: master

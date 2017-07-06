@@ -1,0 +1,29 @@
+{
+  "name": "anak-pulau",
+  "version": "0.0.1",
+  "description": "Mencari pulau pulau yang tersedia di wikipedia atau wikidata dan berada pada openstreetmap",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-pages": "gulp pages",
+    "build-credits": "gulp credits"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wikimedia-ID/anak-pulau.git"
+  },
+  "keywords": [
+    "openstreetmap",
+    "wikipedia",
+    "wikidata"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Wikimedia-ID/anak-pulau/issues"
+  },
+  "homepage": "https://github.com/Wikimedia-ID/anak-pulau#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  }
+}

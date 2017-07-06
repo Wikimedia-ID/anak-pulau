@@ -1,0 +1,9 @@
+[out:json];
+area[name="Kalimantan"];
+(
+  way
+    [natural=coastline]
+    (area);
+ );
+(._;>;);
+out meta;

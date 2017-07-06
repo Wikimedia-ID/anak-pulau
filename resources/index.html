@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Anak Pulau</title>
+
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css" integrity="sha512-wcw6ts8Anuw10Mzh9Ytw4pylW8+NAD4ch3lqm9lzAsTxg0GFeJgoAtxuCLREZSC5lUXdVyo/7yfsqFjQ4S+aKw==" crossorigin=""/>
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.4.2/css/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="assets/app.css">
+</head>
+<body>
+  <div id="mapid"></div>
+  <div class="card" style="position: fixed; top: 20px; right: 20px; max-width: 200px;">
+    <header class="card-header">
+      <p class="card-header-title">
+        Anak Pulau
+      </p>
+      <a class="card-header-icon">
+        <span class="icon">
+          <i class="fa fa-angle-down"></i>
+        </span>
+      </a>
+    </header>
+    <div class="card-content">
+      <div class="content">
+        <button class="button" onclick="document.getElementById('credits').style.display = 'block'">Lihat Kontributor</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="credits">
+    <div class="modal-background"></div>
+    <div class="modal-card" style="margin-top: 20px;">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Kontributor</p>
+        <button class="delete" onclick="document.getElementById('credits').style.display = 'none'"></button>
+      </header>
+      <section class="modal-card-body">
+        <article class="content" id="names">
+        </article>
+      </section>
+      <footer class="modal-card-foot">
+        <a class="button" onclick="document.getElementById('credits').style.display = 'none'">Tutup</a>
+      </footer>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js" integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA==" crossorigin=""></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script type="text/javascript" src="assets/app.js"></script>
+</body>
+</html>
