@@ -1,0 +1,8 @@
+# frozen_string_literal: true
+source "https://rubygems.org"
+
+gem 'mediawiki_api'
+gem 'httplog'
+gem 'awesome_print'
+gem 'haversine'
+
