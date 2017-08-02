@@ -53,6 +53,7 @@ p 'completed parsing geoname'
 p 'retreive wikidata items'
 wikidata = AnakPulau::WikidataQuery.new(query: query).results
 File.write(__dir__ + '/data/indonesian_islands_from_sparql.json', JSON.pretty_generate(wikidata))
+
 p 'completed retreive wikidata item'
 
 p 'retreive wikidata entities'
@@ -63,6 +64,7 @@ wikidata.each_slice(50) do |slice|
   .data['entities']
 end
 File.write(__dir__ + '/data/1_indonesian_island_entities.json', JSON.pretty_generate(entities))
+
 p 'retrieved wikidata entities'
 
 # entities = JSON.parse File.read(__dir__ + '/data/1_indonesian_island_entities.json')
@@ -76,20 +78,23 @@ entities.each do |id, entity|
       coordinate_wikidata['latitude'].to_s == geoname['latitude'].to_s &&
       coordinate_wikidata['longitude'].to_s == geoname['longitude'].to_s
     end
-    if is_found && coordinate['references']
-      is_found_ref = coordinate['references'].find do |ref|
-        if ref.dig('snaks', 'P248')
-          ref.dig('snaks', 'P248').find do |snak|
-            snak.dig('datavalue', 'value', 'id') == 'Q830106'
+    if is_found
+      if coordinate['references']
+        is_found_ref = coordinate['references'].find do |ref|
+          if ref.dig('snaks', 'P248')
+            ref.dig('snaks', 'P248').find do |snak|
+              snak.dig('datavalue', 'value', 'id') == 'Q830106'
+            end
           end
         end
-      end
-
-      if !is_found_ref
+        if !is_found_ref
+          claims << coordinate
+          break
+        end
+      else
         claims << coordinate
         break
       end
-
     end
   end
 end
@@ -120,5 +125,6 @@ claims.map! do |claim|
 end
 File.write(__dir__ + '/data/3_claims_updated_references.json', JSON.pretty_generate(claims))
 p 'finished update wikidata claims'
+
 
 
