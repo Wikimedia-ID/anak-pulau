@@ -1,6 +1,7 @@
 require 'csv'
 require 'mediawiki_api'
 require 'awesome_print'
+require 'irb'
 require_relative 'wikidata_query'
 
 client = MediawikiApi::Client.new "https://www.wikidata.org/w/api.php"
@@ -64,7 +65,7 @@ wikidata.each_slice(50) do |slice|
   .data['entities']
 end
 File.write(__dir__ + '/data/1_indonesian_island_entities.json', JSON.pretty_generate(entities))
-
+binding.irb
 p 'retrieved wikidata entities'
 
 # entities = JSON.parse File.read(__dir__ + '/data/1_indonesian_island_entities.json')
@@ -99,7 +100,7 @@ entities.each do |id, entity|
   end
 end
 p 'completed filtering'
-
+binding.irb
 # using wbsetreference entpoint
 File.write(__dir__ + '/data/2_claims_with_geonames.json', JSON.pretty_generate(claims))
 
@@ -125,6 +126,3 @@ claims.map! do |claim|
 end
 File.write(__dir__ + '/data/3_claims_updated_references.json', JSON.pretty_generate(claims))
 p 'finished update wikidata claims'
-
-
-
