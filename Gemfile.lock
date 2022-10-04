@@ -18,7 +18,7 @@ GEM
     rack (2.0.3)
     socksify (1.7.1)
     thread_safe (0.3.6)
-    tzinfo (1.2.3)
+    tzinfo (1.2.10)
       thread_safe (~> 0.1)
 
 PLATFORMS
